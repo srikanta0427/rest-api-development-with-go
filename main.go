@@ -1,7 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/srikanta0427/rest_api_design/app"
+)
 
 func main() {
-	fmt.Println("Hello World")
+	cfg := app.NewConfig() // set the server to listen on port
+	appl := app.NewApplication(cfg)
+	errRun := appl.Run()
+	if errRun != nil {
+		log.Fatal(errRun)
+	}
 }
