@@ -3,8 +3,11 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/srikanta0427/rest_api_design/model"
 	"github.com/srikanta0427/rest_api_design/services"
+	"github.com/srikanta0427/rest_api_design/validation"
 )
 
 type UserController struct {
@@ -17,8 +20,23 @@ func NewUserController(userService services.UserService) *UserController {
 	}
 }
 
-func (u *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
-	_ = u.userService.CreateUser()
-	fmt.Println("CreateUser from controller")
-	w.Write([]byte("CreateUser from controller"))
+// handler function
+
+func (u *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	var user model.User
+	us := user.UserCons(6, "srikanta", "srikanta", "password", time.Now())
+
+	// validate userStruct field
+	errValid := validation.ValidateUserStruct(us)
+	if errValid != nil {
+		http.Error(w, errValid.Error(), http.StatusBadRequest)
+		return
+	}
+	// UserService
+	_, err := u.userService.CreateUser(us)
+	if err != nil {
+		fmt.Println(err.Error())
+		panic(err)
+	}
+	w.WriteHeader(http.StatusCreated)
 }
