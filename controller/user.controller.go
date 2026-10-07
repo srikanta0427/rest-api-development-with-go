@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -24,19 +25,27 @@ func NewUserController(userService services.UserService) *UserController {
 
 func (u *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var user model.User
-	us := user.UserCons(6, "srikanta", "srikanta", "password", time.Now())
+
+	// json -> go struct
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	user = user.UserCons(9, user.Name, user.Email, user.Password, time.Now())
 
 	// validate userStruct field
-	errValid := validation.ValidateUserStruct(us)
+	errValid := validation.ValidateUserStruct(user)
 	if errValid != nil {
 		http.Error(w, errValid.Error(), http.StatusBadRequest)
 		return
 	}
+
 	// UserService
-	_, err := u.userService.CreateUser(us)
-	if err != nil {
-		fmt.Println(err.Error())
-		panic(err)
+	_, errSer := u.userService.CreateUser(&user)
+	if errSer != nil {
+		fmt.Println(errSer.Error())
+		panic(errSer.Error())
 	}
 	w.WriteHeader(http.StatusCreated)
 }

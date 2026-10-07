@@ -9,7 +9,7 @@ import (
 )
 
 type UserRepository interface {
-	Create(u model.User) (int64, error)
+	Create(u *model.User) (int64, error)
 }
 
 type UserRepositoryImpl struct {
@@ -26,7 +26,7 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	}
 }
 
-func (repo *UserRepositoryImpl) Create(u model.User) (int64, error) {
+func (repo *UserRepositoryImpl) Create(u *model.User) (int64, error) {
 	fmt.Println("Creating user from Repository")
 
 	// sql query for inserting

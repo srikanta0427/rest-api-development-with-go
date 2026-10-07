@@ -4,6 +4,7 @@ go 1.27.1
 
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
+	github.com/fawwazid/go-bcrypt v1.1.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
 	github.com/go-chi/chi v1.5.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
