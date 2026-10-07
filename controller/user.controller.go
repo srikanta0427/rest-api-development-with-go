@@ -2,12 +2,12 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/srikanta0427/rest_api_design/model"
 	"github.com/srikanta0427/rest_api_design/services"
+	"github.com/srikanta0427/rest_api_design/util"
 	"github.com/srikanta0427/rest_api_design/validation"
 )
 
@@ -32,20 +32,22 @@ func (u *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	user = user.UserCons(9, user.Name, user.Email, user.Password, time.Now())
+	user = user.UserCons(13, user.Name, user.Email, user.Password, time.Now())
+
+	// while returning user to client
+	user.Password = "Thank You😊😊😊"
 
 	// validate userStruct field
 	errValid := validation.ValidateUserStruct(user)
 	if errValid != nil {
-		http.Error(w, errValid.Error(), http.StatusBadRequest)
+		util.Error(w, http.StatusBadRequest, "validation failed", errValid.Error())
 		return
 	}
 
 	// UserService
-	_, errSer := u.userService.CreateUser(&user)
+	_, errSer := u.userService.CreateUser(user)
 	if errSer != nil {
-		fmt.Println(errSer.Error())
-		panic(errSer.Error())
+		util.Error(w, http.StatusBadRequest, "registration failed", errSer.Error())
 	}
-	w.WriteHeader(http.StatusCreated)
+	util.Success(w, http.StatusCreated, "register success", user)
 }
