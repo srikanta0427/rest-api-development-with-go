@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/srikanta0427/rest_api_design/model"
 	"github.com/srikanta0427/rest_api_design/services"
@@ -32,7 +31,6 @@ func (u *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	user = user.UserCons(13, user.Name, user.Email, user.Password, time.Now())
 
 	// while returning user to client
 	user.Password = "Thank You😊😊😊"
@@ -43,6 +41,8 @@ func (u *UserController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		util.Error(w, http.StatusBadRequest, "validation failed", errValid.Error())
 		return
 	}
+
+
 
 	// UserService
 	_, errSer := u.userService.CreateUser(user)

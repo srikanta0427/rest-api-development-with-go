@@ -4,13 +4,25 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type Router interface {
-	Register(r chi.Router)
-}
+type routeHandler func(chi.Router)
 
-func SetUpRouter(route Router) *chi.Mux {
+func SetUpRouter(userRouter *UserRouter, organizerRouter *OrganizerRouter) *chi.Mux {
 	router := chi.NewRouter()
 
-	route.Register(router)
+	router.Route("/", func(r chi.Router) {
+
+		// for user
+		r.Route("/user", func(r chi.Router) {
+			userRouter.Register(r)
+		})
+
+		// for organizer
+
+		r.Route("/organizer", func(r chi.Router) {
+			organizerRouter.Register(r)
+		})
+	})
+
 	return router
+
 }

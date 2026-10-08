@@ -14,7 +14,7 @@ func SetUpDB() (*sql.DB, error) {
 	cfg.Passwd = config.GetString("DB_PASS", "root")
 	cfg.Net = "tcp"
 	cfg.Addr = config.GetString("DB_HOST", "127.0.0.1")
-	cfg.DBName = config.GetString("DB_NAME", "user")
+	cfg.DBName = config.GetString("DB_NAME", "event")
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {

@@ -11,3 +11,8 @@ func ValidateUserStruct(user model.User) error {
 	validate := validator.New()
 	return validate.Struct(user)
 }
+
+func OrganizerValidation(organizer model.Organizer) error {
+	validate := validator.New()
+	return validate.Struct(organizer)
+}

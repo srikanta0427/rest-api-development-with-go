@@ -31,6 +31,7 @@ type Application struct {
 }
 
 func NewApplication(cfg Config) *Application {
+
 	return &Application{
 		Config:  cfg,
 		Storage: *db.NewStorage(),
@@ -38,21 +39,33 @@ func NewApplication(cfg Config) *Application {
 }
 
 func (app *Application) Run() error {
-	dbcon, err := config2.SetUpDB()
+	dbconfig, err := config2.SetUpDB()
 	if err != nil {
 		return err
 	}
 
 	// User Repository
-	ur := db.NewUserRepository(dbcon)
+	ur := db.NewUserRepository(dbconfig)
 	us := services.NewUserService(ur)
 	uc := controller.NewUserController(us)
 	ud := router.NewUserRouter(uc)
 
+	// email
+	emailService := services.NewEmailService()
+
+	// Organizer
+	organizationRepo := db.NewOrganizer(dbconfig)
+	organizerService := services.NewOrganizerService(organizationRepo, emailService)
+	organizerController := controller.NewOrganizerController(organizerService)
+	organizerRouter := router.NewOrganizerRouter(organizerController)
+
+
+	httpRouter := router.SetUpRouter(ud, organizerRouter)
+
 	// server
 	server := http.Server{
 		Addr:    app.Config.Addr,
-		Handler: router.SetUpRouter(ud),
+		Handler: httpRouter,
 	}
 
 	fmt.Println("Server is listening on " + app.Config.Addr)
