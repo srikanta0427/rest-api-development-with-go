@@ -14,16 +14,15 @@ type OrganizerService interface {
 	SendRegistrationOtp(org *model.Organizer) error
 	VerifyOtp(email, otp string) error
 	Login(email, password string) (model.Organizer, error)
+	UploadLogo(id int64) (model.Organizer, error)
+	UpdateLogoUrl(id int64, url string) error
 }
-
-
 
 type OrganizerServiceImpl struct {
 	organizerRepository db.OrganizerRepo
 	emailService        EmailService
-
-	mu      sync.Mutex
-	pending map[string]model.PendingOrganizer
+	mu                  sync.Mutex
+	pending             map[string]model.PendingOrganizer
 }
 
 func NewOrganizerService(
@@ -106,17 +105,32 @@ func (s *OrganizerServiceImpl) VerifyOtp(
 	return nil
 }
 
-
 func (s *OrganizerServiceImpl) Login(email, password string) (model.Organizer, error) {
-	organizer , err := s.organizerRepository.GetByEmail(email)
+	organizer, err := s.organizerRepository.GetByEmail(email)
+	fmt.Println("organizer", organizer)
 	if err != nil {
 		return model.Organizer{}, fmt.Errorf("could not get organizer")
 	}
 
 	// check password
-	if password != organizer.Password {
-		return model.Organizer{}, fmt.Errorf("incorrect password")
+	if !security.ComparePassWord(password, organizer.Password) {
+		return model.Organizer{}, fmt.Errorf("invalid password")
 	}
 
 	return organizer, nil
+}
+func (s *OrganizerServiceImpl) UploadLogo(id int64) (model.Organizer, error) {
+	byId, err := s.organizerRepository.GetById(id)
+	if err != nil {
+		return model.Organizer{}, err
+	}
+	return byId, nil
+}
+
+func (s *OrganizerServiceImpl) UpdateLogoUrl(id int64, url string) error {
+	err := s.organizerRepository.UpdateLogoUrl(id, url)
+	if err != nil {
+		return err
+	}
+	return nil
 }

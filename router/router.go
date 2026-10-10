@@ -20,6 +20,7 @@ func SetUpRouter(userRouter *UserRouter, organizerRouter *OrganizerRouter) *chi.
 
 		r.Route("/organizer", func(r chi.Router) {
 			organizerRouter.Register(r)
+			organizerRouter.Profile(r)
 		})
 	})
 
