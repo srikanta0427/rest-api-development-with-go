@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/srikanta0427/rest_api_design/config"
@@ -44,6 +45,14 @@ func (app *Application) Run() error {
 		return err
 	}
 
+	// redis
+	rdb := config2.NewRedis()
+	defer rdb.Close()
+
+	if err := config2.CheckRedis(rdb); err != nil {
+		log.Fatal(err)
+	}
+
 	// User Repository
 	ur := db.NewUserRepository(dbconfig)
 	us := services.NewUserService(ur)
@@ -55,10 +64,9 @@ func (app *Application) Run() error {
 
 	// Organizer
 	organizationRepo := db.NewOrganizer(dbconfig)
-	organizerService := services.NewOrganizerService(organizationRepo, emailService)
+	organizerService := services.NewOrganizerService(organizationRepo, emailService, rdb)
 	organizerController := controller.NewOrganizerController(organizerService)
 	organizerRouter := router.NewOrganizerRouter(organizerController)
-
 
 	httpRouter := router.SetUpRouter(ud, organizerRouter)
 

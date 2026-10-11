@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -90,40 +91,71 @@ func (u *OrganizerController) VerifyOrganizer(
 		return
 	}
 
+	ctx := context.Background()
 	if err := u.organizerService.VerifyOtp(
 		request.Email,
 		request.OTP,
+		ctx,
+
 	); err != nil {
 		util.Error(w, http.StatusBadRequest, "Verification failed", err.Error())
 		return
 	}
-
-	util.Success(w, http.StatusCreated, "Organizer created", nil)
+	//util.Success(w, http.StatusCreated, "Organizer created", nil)
 }
 
-func (org *OrganizerController) Login(w http.ResponseWriter, r *http.Request) {
-	// get the email and password
-	// decode json to model
-	var orgi model.Organizer
-	if err := json.NewDecoder(r.Body).Decode(&orgi); err != nil {
+func (org *OrganizerController) Login(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	var request struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	// Decode request
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		util.Error(w, http.StatusBadRequest, "Invalid JSON", err.Error())
+		return
 	}
-	fmt.Println(orgi.Email)
-	orgi, err := org.organizerService.Login(orgi.Email, orgi.Password)
+
+	// Validate input
+	if request.Email == "" || request.Password == "" {
+		util.Error(w, http.StatusBadRequest,
+			"Email and password required", "")
+		return
+	}
+
+	// Authenticate
+	organizer, err := org.organizerService.Login(
+		request.Email,
+		request.Password,
+	)
+
 	if err != nil {
-		fmt.Println("e rroror")
-		util.Error(w, http.StatusBadRequest, "Login failed", err.Error())
+		fmt.Println("Login failed: %v", err)
+		util.Error(w, http.StatusUnauthorized,
+			"Invalid email or password", map[string]string{"message": "Invalid email or password"})
+		return
 	}
-	token, err := middlewere.GenerateToken(orgi.ID)
+
+	// Generate JWT
+	token, err := middlewere.GenerateToken(organizer.ID)
 	if err != nil {
-		fmt.Println(err)
-		util.Error(w, http.StatusInternalServerError, "Error generating token", err.Error())
+		util.Error(w, http.StatusInternalServerError,
+			"Token generation failed", "")
+		return
 	}
-	// set the cookie
+
+	// Set cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:  "token",
-		Value: token,
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
+
 	util.Success(w, http.StatusOK, "Login Success", nil)
 }
 
@@ -199,4 +231,48 @@ func (or *OrganizerController) UploadLogo(
 		util.Error(w, 500, "Error uploading logo", "")
 	}
 	util.Success(w, http.StatusOK, "Upload Success", nil)
+}
+
+func (org *OrganizerController) SaveOrganizer(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	var request struct {
+		Email    string `json:"email"`
+		Accepted bool   `json:"accepted"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		util.Error(w, http.StatusBadRequest,
+			"Invalid JSON", err.Error())
+		return
+	}
+
+	if request.Email == "" {
+		util.Error(w, http.StatusBadRequest,
+			"Email is required", "")
+		return
+	}
+
+	if !request.Accepted {
+		util.Error(w, http.StatusBadRequest,
+			"Terms and conditions must be accepted", "")
+		return
+	}
+
+	err := org.organizerService.SaveOrganizer(
+		request.Email,
+		request.Accepted,
+	)
+
+	if err != nil {
+		log.Printf("SaveOrganizer failed: %v", err)
+
+		util.Error(w, http.StatusBadRequest,
+			"Cannot save organizer", err.Error())
+		return
+	}
+
+	util.Success(w, http.StatusCreated,
+		"Organizer saved successfully", nil)
 }

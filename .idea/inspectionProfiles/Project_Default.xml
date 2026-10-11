@@ -5,6 +5,7 @@
       <functions>
         <function importPath="github.com/wneessen/go-mail" name="NewClient" />
         <function importPath="os" name="Create" />
+        <function importPath="github.com/srikanta0427/rest_api_design/config/db" name="NewRedis" />
       </functions>
     </inspection_tool>
   </profile>

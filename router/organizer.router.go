@@ -20,6 +20,7 @@ func (u *OrganizerRouter) Register(r chi.Router) {
 	r.Post("/register-pending", u.organizer.RegisterOrganizer)
 	r.Post("/verify-organizer", u.organizer.VerifyOrganizer)
 	r.Post("/org-login", u.organizer.Login)
+	r.Post("/save-organizer", u.organizer.SaveOrganizer)
 }
 
 func (u *OrganizerRouter) Profile(r chi.Router) {
